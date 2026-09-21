@@ -248,3 +248,59 @@ class TransformationResult:
     success: bool = True
     notes: list[str] = field(default_factory=list)
 
+
+# ---------------------------------------------------------------------------
+# Milestone 6 — Validation & Migration Verification
+# ---------------------------------------------------------------------------
+
+
+class ValidationStatus(Enum):
+    """Outcome of a single validation check.
+
+    * ``PASS``     — the check ran and the repository passed.
+    * ``FAIL``     — the check ran and the repository failed it.
+    * ``SKIPPED``  — the check could not be performed (no test command
+      detected, file missing, etc.) — not a failure of the repository.
+    """
+
+    PASS = "pass"
+    FAIL = "fail"
+    SKIPPED = "skipped"
+
+
+@dataclass
+class ValidationRecord:
+    """A single validation check result.
+
+    Captures, for one check: a human-readable ``check`` name, the
+    ``status`` (PASS/FAIL/SKIPPED), the ``command`` that was run (or
+    ``None`` for checks that do not execute a command), captured
+    ``output`` (stdout, or a descriptive message), ``error`` when the
+    check itself could not be performed or threw, and a list of
+    ``affected_files`` when the check is file-oriented.
+    """
+
+    check: str
+    status: ValidationStatus
+    command: str | None = None
+    output: str | None = None
+    error: str | None = None
+    affected_files: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ValidationResult:
+    """Outcome of validating a transformed repository.
+
+    Produced by :func:`execute_validation` (or
+    :class:`ValidationEngine`) after running the standard set of
+    migration-validation checks against a working copy.  ``success`` is
+    ``True`` when no check returned ``FAIL``; ``SKIPPED`` checks do not
+    make the result unsuccessful.
+    """
+
+    working_copy: str
+    records: list[ValidationRecord] = field(default_factory=list)
+    success: bool = True
+    notes: list[str] = field(default_factory=list)
+
