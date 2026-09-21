@@ -192,3 +192,59 @@ class MigrationPlan:
     actions: list[MigrationAction] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
+
+class TransformationStatus(Enum):
+    """Outcome of executing a single :class:`MigrationAction`.
+
+    * ``SUCCESS`` — the action was applied to the working copy.
+    * ``SKIPPED`` — the action was intentionally not executed (``MANUAL_REVIEW``
+      or ``NO_TRANSFORMATION``); nothing changed.
+    * ``PENDING`` — the action is deferred because the capability it requires
+      is not yet implemented (``LLM_ASSISTED``); nothing changed.
+    * ``FAILED``  — the action was attempted but could not be applied (the file
+      no longer exists, the source changed since discovery, the edit was
+      invalid, or the result had a syntax error).
+    """
+
+    SUCCESS = "success"
+    SKIPPED = "skipped"
+    PENDING = "pending"
+    FAILED = "failed"
+
+
+@dataclass
+class TransformationRecord:
+    """A per-action record of a transformation execution.
+
+    Captures, for a single :class:`MigrationAction`: the affected ``file``, the
+    ``strategy`` that was selected, the execution ``status``, whether the file
+    was actually modified (``changed``), and the ``error`` message when
+    execution failed.
+    """
+
+    action: MigrationAction
+    file: str
+    strategy: MigrationActionStrategy
+    status: TransformationStatus
+    changed: bool
+    error: str | None = None
+
+
+@dataclass
+class TransformationResult:
+    """Outcome of executing a :class:`MigrationPlan` into a working repository.
+
+    The engine operates on a *working copy* of the repository (never the
+    original), and records one :class:`TransformationRecord` for every
+    :class:`MigrationAction` in the plan.
+
+    ``success`` is ``True`` when no action failed; ``PENDING``/``SKIPPED``
+    actions do not make the overall result unsuccessful.
+    """
+
+    plan: MigrationPlan
+    working_copy: str
+    records: list[TransformationRecord] = field(default_factory=list)
+    success: bool = True
+    notes: list[str] = field(default_factory=list)
+

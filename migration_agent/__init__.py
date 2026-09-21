@@ -1,4 +1,4 @@
-"""Public API for the migration agent (Milestones 1-4)."""
+"""Public API for the migration agent (Milestones 1-5)."""
 
 from .affected_discovery import discover_affected_usages
 from .discovery import detect_version, discover_migration, discover_repository
@@ -14,10 +14,17 @@ from .models import (
     MigrationChange,
     MigrationPlan,
     MigrationSpec,
+    TransformationRecord,
+    TransformationResult,
+    TransformationStatus,
     UsageClassification,
     VersionEvidence,
 )
 from .planning import create_migration_plan, plan_action
+from .transformation import (
+    TransformationEngine,
+    execute_transformation_plan,
+)
 
 __all__ = [
     "AffectedUsage",
@@ -30,6 +37,10 @@ __all__ = [
     "MigrationChange",
     "MigrationPlan",
     "MigrationSpec",
+    "TransformationEngine",
+    "TransformationRecord",
+    "TransformationResult",
+    "TransformationStatus",
     "UsageClassification",
     "VersionEvidence",
     "acquire_migration_knowledge",
@@ -38,6 +49,6 @@ __all__ = [
     "discover_affected_usages",
     "discover_migration",
     "discover_repository",
+    "execute_transformation_plan",
     "plan_action",
 ]
-
