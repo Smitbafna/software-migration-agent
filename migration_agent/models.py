@@ -113,3 +113,82 @@ class KnowledgeAcquisition:
     changes: list[MigrationChange] = field(default_factory=list)
     reason: str | None = None  # why knowledge is unavailable (when supported=False)
 
+
+class UsageClassification(Enum):
+    """Classification of an affected code usage."""
+
+    CONFIRMED = "confirmed"        # AST-verified structural match
+    CANDIDATE = "candidate"        # Textual match or unverified candidate
+    SYNTAX_ERROR = "syntax_error"  # Python AST parsing failed on file
+
+
+@dataclass
+class AffectedUsage:
+    """A single code location affected by a MigrationChange."""
+
+    change: MigrationChange
+    file: str
+    line: int
+    source_context: str
+    classification: UsageClassification
+
+
+class MigrationActionStrategy(Enum):
+    """Strategy for transforming an AffectedUsage into a code change.
+
+    * TEXT_EDIT  — simple deterministic text/structured replacement.
+    * AST_EDIT   — structural Python change (class structure, decorator,
+      signature, argument removal, etc.).
+    * LLM_ASSISTED — semantic/complex change requiring language-model
+      assistance to verify or transform.
+    * MANUAL_REVIEW — ambiguous or unsafe change that must be reviewed by
+      a human before any automated edit.
+    * NO_TRANSFORMATION — the change is informational only; no code edit
+      is required.
+    """
+
+    TEXT_EDIT = "text_edit"
+    AST_EDIT = "ast_edit"
+    LLM_ASSISTED = "llm_assisted"
+    MANUAL_REVIEW = "manual_review"
+    NO_TRANSFORMATION = "no_transformation"
+
+
+@dataclass
+class MigrationAction:
+    """A single planned transformation derived from an AffectedUsage.
+
+    Each action carries enough information for a future transformer to
+    execute it: the originating :class:`AffectedUsage` (which carries the
+    file, line, source context, and the associated :class:`MigrationChange`
+    with old/new text), the chosen execution :attr:`strategy`, a
+    human-readable :attr:`reason`, plus the concrete ``old`` / ``new``
+    replacement strings surfaced for convenience.
+    """
+
+    usage: AffectedUsage
+    strategy: MigrationActionStrategy
+    reason: str
+    old: str | None = None  # text to replace   (defaults to usage.change.old)
+    new: str | None = None  # replacement text (defaults to usage.change.new)
+
+
+@dataclass
+class MigrationPlan:
+    """A complete migration plan for a repository.
+
+    Derived from ``MigrationSpec``, ``MigrationChange[]`` and
+    ``AffectedUsage[]``, the plan contains an ordered list of
+    :class:`MigrationAction` objects — one per affected usage that
+    requires transformation.
+
+    *Changes with no direct code usage* naturally produce no actions
+    because they have no corresponding :class:`AffectedUsage`.  Any
+    noteworthy informational notes (e.g. "no migration required") are
+    recorded in :attr:`notes`.
+    """
+
+    spec: MigrationSpec
+    actions: list[MigrationAction] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+
