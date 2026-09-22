@@ -3,7 +3,8 @@ name: migration-agent
 
 on:
   release:
-    types: [published]
+    types:
+      - published
 
 permissions:
   contents: read
