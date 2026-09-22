@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "migration-agent"
+version = "0.1.0a1"
+description = "Evidence-backed dependency migration assistant (experimental alpha)"
+readme = "README.md"
+requires-python = ">=3.12"
+# No license file exists in this repository yet; a license must be chosen
+# before publishing. No License classifier is declared on purpose.
+keywords = ["migration", "refactoring", "dependency", "upgrade"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+    "Typing :: Typed",
+]
+# Runtime dependencies: none. The package uses only the Python standard
+# library (ast, re, shutil, subprocess, tempfile, tomllib, urllib, ...).
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "build", "twine"]
+
+[tool.setuptools]
+# Explicit package list: setuptools auto-discovery would pick up the
+# top-level `tests` directory as a package and ship it in the sdist.
+packages = ["migration_agent", "migration_agent.knowledge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

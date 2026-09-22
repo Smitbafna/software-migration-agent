@@ -1,0 +1,12 @@
+prune tests
+prune examples
+prune example_repo
+exclude E2E_TEST_SUMMARY.md FILIP_EXPERIMENT_REPORT.md FINAL_SUMMARY.md
+    IMPLEMENTATION_PLAN.md MILESTONE_8_SUMMARY.md
+exclude affected_example.py knowledge_example.py planning_example.py
+    transformation_example.py main.py
+prune .github
+prune .venv
+prune FiLiP
+global-exclude __pycache__ *.pyc *.pyo
+global-exclude .pytest_cache

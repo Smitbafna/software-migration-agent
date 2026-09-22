@@ -71,7 +71,9 @@ class _ASTUsageDetector(ast.NodeVisitor):
             attr = node.func.attr
             if "parse_obj" in self.change_old and attr == "parse_obj":
                 self.confirmed_lines.add(node.lineno)
-            elif ("dict()" in self.change_old or "json()" in self.change_old) and attr in ("dict", "json"):
+            elif "dict()" in self.change_old and attr == "dict":
+                self.confirmed_lines.add(node.lineno)
+            elif "json()" in self.change_old and attr == "json":
                 self.confirmed_lines.add(node.lineno)
             elif "__fields__" in self.change_old and attr in ("__fields__", "__fields_set__"):
                 self.confirmed_lines.add(node.lineno)

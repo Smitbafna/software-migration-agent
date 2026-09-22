@@ -1,9 +1,9 @@
-"""Knowledge acquisition (Milestone 2).
+"""Knowledge acquisition (Milestone 2 + Dynamic Knowledge Acquisition).
 
 Pipeline::
 
     MigrationSpec -> acquire_migration_knowledge() -> KnowledgeAcquisition
-                                                       └── list[MigrationChange]
+                                                        └── list[MigrationChange]
 
 Generic machinery only — nothing here knows about a specific technology.
 Technology-specific, evidence-backed change sets live in sibling modules
@@ -16,6 +16,9 @@ import re
 from dataclasses import dataclass
 
 from ..models import KnowledgeAcquisition, MigrationChange, MigrationSpec
+
+# Import set_backend from acquisition module for re-export
+from .acquisition import set_backend
 
 
 @dataclass(frozen=True)
@@ -53,6 +56,9 @@ def acquire_migration_knowledge(spec: MigrationSpec) -> KnowledgeAcquisition:
     Knowledge is returned only when a registered source covers the requested
     (technology, source major, target major) path. Any other case returns an
     explicit ``unsupported`` result with a reason — never fabricated changes.
+
+    This function first checks for static registered knowledge, then attempts
+    dynamic acquisition from authoritative web sources for unknown paths.
     """
     technology = spec.technology.strip().lower()
     source_major = _major_of(spec.source_version)
@@ -68,10 +74,11 @@ def acquire_migration_knowledge(spec: MigrationSpec) -> KnowledgeAcquisition:
         )
 
     source = _REGISTRY.get((technology, source_major, target_major))
-    if source is None:
-        return _unsupported(spec, _unavailable_reason(technology, spec, source_major, target_major))
+    if source is not None:
+        return KnowledgeAcquisition(spec=spec, supported=True, changes=list(source.changes))
 
-    return KnowledgeAcquisition(spec=spec, supported=True, changes=list(source.changes))
+    # No static knowledge — attempt dynamic acquisition from web.
+    return _acquire_from_web(spec, technology, source_major, target_major)
 
 
 def _unavailable_reason(technology: str, spec: MigrationSpec, source_major: str | None, target_major: str) -> str:
@@ -97,6 +104,24 @@ def _unsupported(spec: MigrationSpec, reason: str) -> KnowledgeAcquisition:
     return KnowledgeAcquisition(spec=spec, supported=False, reason=reason)
 
 
+# ---------------------------------------------------------------------------
+# Dynamic knowledge acquisition from web sources
+# ---------------------------------------------------------------------------
+
+
+def _acquire_from_web(spec: MigrationSpec, technology: str, source_major: str | None, target_major: str) -> KnowledgeAcquisition:
+    """Attempt to acquire migration knowledge from the web.
+
+    Searches for authoritative migration documentation, retrieves and inspects
+    source pages, and extracts MigrationChange objects with evidence.
+
+    If no authoritative migration information can be found or verified,
+    returns an unsupported result with an explicit reason.
+    """
+    from .acquisition import acquire_migration_knowledge as dynamic_acquire, set_backend
+    return dynamic_acquire(spec)
+
+
 # Register the initial evidence-backed knowledge source (Pydantic 1.x -> 2.x).
 from . import pydantic_v2 as _pydantic_v2  # noqa: E402,F401
 
@@ -106,7 +131,7 @@ register(
         source_major=_pydantic_v2.SOURCE_MAJOR,
         target_major=_pydantic_v2.TARGET_MAJOR,
         changes=tuple(_pydantic_v2.changes()),
-    )
+    ),
 )
 
 __all__ = [
@@ -115,4 +140,5 @@ __all__ = [
     "MigrationChange",
     "acquire_migration_knowledge",
     "register",
+    "set_backend",
 ]

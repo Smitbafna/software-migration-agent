@@ -41,15 +41,28 @@ def changes() -> list[MigrationChange]:
         ),
         MigrationChange(
             change_type=ChangeType.REPLACEMENT,
-            old="Model.dict() / Model.json()",
-            new="Model.model_dump() / Model.model_dump_json()",
+            old="Model.dict()",
+            new="Model.model_dump()",
             description=(
-                "The instance methods .dict() and .json() were renamed to .model_dump() and "
-                ".model_dump_json(); the V1 names are gone in V2 and must be updated."
+                "The instance method .dict() was renamed to .model_dump(); "
+                "the V1 name is gone in V2 and must be updated."
             ),
             evidence=_evidence(
                 "Changes to pydantic.BaseModel",
-                "dict() model_dump() json() model_dump_json()",
+                "dict() model_dump()",
+            ),
+        ),
+        MigrationChange(
+            change_type=ChangeType.REPLACEMENT,
+            old="Model.json()",
+            new="Model.model_dump_json()",
+            description=(
+                "The instance method .json() was renamed to .model_dump_json(); "
+                "the V1 name is gone in V2 and must be updated."
+            ),
+            evidence=_evidence(
+                "Changes to pydantic.BaseModel",
+                "json() model_dump_json()",
             ),
         ),
         MigrationChange(
